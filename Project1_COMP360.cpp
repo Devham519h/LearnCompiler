@@ -53,6 +53,91 @@ bool assign_parse(const vector<Token>& t_list, size_t& curr_pos){
     return true;
 }
 
+// Parses declaration statements in the form: float identifier;
+bool declares_parse(const vector<Token>& t_list, size_t& curr_pos){
+
+    // Match the float keyword
+    if(!token_match(t_list, curr_pos, TokType::keyw, "float", "'float'")){
+        return false;
+    }
+
+    // Match the variable name
+    if(!token_match(t_list, curr_pos, TokType::ident, "", "identifier")){
+        return false;
+    }
+    
+    // A declaration must end with a semicolon
+    if(!token_match(t_list, curr_pos, TokType::scolon, "", "';'")){
+        return false;
+    }
+    
+    // If another declaration begins, parse it recursively
+    if(t_list[curr_pos].type == TokType::keyw && t_list[curr_pos].lexeme == "float"){
+        return declares_parse(t_list, curr_pos);
+    }
+    return true;
+
+}
+
+// Parses the structure of the entire program
+bool program_parse(const vector<Token>& t_list, size_t& curr_pos){
+
+    // Match the function return type and function name
+    if (!token_match(t_list, curr_pos, TokType::keyw, "float", "'float'")){
+        return false;
+    }
+
+    if (!token_match(t_list, curr_pos, TokType::ident, "", "identifier")){
+        return false;
+    }
+
+    // Match the opening parenthesis and function parameter
+    if (!token_match(t_list, curr_pos, TokType::lparen, "", "'('")){
+        return false;
+    }
+
+    if(!token_match(t_list, curr_pos, TokType::keyw, "float", "'float'")){
+        return false;
+    }
+
+    if(!token_match(t_list, curr_pos, TokType::ident, "", "identifier")){
+        return false;
+    }
+
+    // Match the closing parenthesis and opening brace
+    if(!token_match(t_list, curr_pos, TokType::rparen, "", "')'")){
+        return false;
+    }
+
+    if(!token_match(t_list, curr_pos, TokType::lbrace, "", "'{'")){
+        return false;
+    }
+
+    // Parse declarations if the function contains any
+    if (t_list[curr_pos].type == TokType::keyw && t_list[curr_pos].lexeme == "float"){
+        if(!declares_parse(t_list, curr_pos)){
+            return false;
+        }
+    }
+
+    // Parse the assignment statement
+    if(!assign_parse(t_list, curr_pos)){
+        return false;
+    }
+
+    // Match the closing brace
+    if(!token_match(t_list, curr_pos, TokType::rbrace, "", "'}'")){
+        return false;
+    }
+
+    // Make sure there are no extra tokens after the program
+    if(!token_match(t_list, curr_pos, TokType::end_input, "", "end of input")){
+        return false;
+    }
+
+    return true;
+}
+
 string type_str(TokType type){
     switch(type){
         case TokType::oper: return "operator";
@@ -99,7 +184,7 @@ vector<Token> create_token_list(string text){
             int start_pos = i;
             TokType type;
             //put together a word
-            while((i<text.length()) && (std::isalpha(static_cast<unsigned char>(text.at(i))))){i++;}
+            while((i<text.length()) && (std::isalnum(static_cast<unsigned char>(text.at(i))))){i++;}
             string word = text.substr(start_pos, i-start_pos);
                 
             // setting token type depending on the word
@@ -142,6 +227,14 @@ int main(int argc, char* argv[]){
 
     for(const Token& token : token_list){
         cout << token.lexeme << " | " << type_str(token.type) << endl;
+    }
+
+    size_t curr_pos = 0;
+    if(program_parse(token_list, curr_pos)){
+        cout << "Program is syntactically correct" << endl;
+    }
+    else{
+        cout << "Program has a syntax error" << endl;
     }
 
     return 0;
