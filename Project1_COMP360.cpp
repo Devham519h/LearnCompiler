@@ -4,7 +4,7 @@
 #include <vector>
 #include <cctype>
 using namespace std;
-/// Devin Hamilton 
+/// Devin Hamilton and Tyler McCormick
 /// 10/03/26
 /// COMP360 Project 1
 
